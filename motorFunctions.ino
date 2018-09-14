@@ -92,7 +92,11 @@ void findEdges () { //This function finds the edges for the motor movements - Ma
 
   Serial.println("FINDING EDGES");
   delay(3000);
-  while ((analogRead(limitSwPin) <= magnetHigh) && (analogRead(limitSwPin) >= magnetLow)) { // numbers might need adjusting based on analog reads of hall sensor
+// This WHILE Lines works for Hall Sensor
+//  while ((analogRead(limitSwPin) <= magnetHigh) && (analogRead(limitSwPin) >= magnetLow)) { // numbers might need adjusting based on analog reads of hall sensor
+
+// This While Line Works for regular switches
+  while (digitalRead(limitSwPin) == HIGH) { //button not pressed (it's in pullup mode) 
     move(150, 2);
     newPosition = myEnc.read();
     if (newPosition != oldPosition) {
@@ -112,7 +116,11 @@ void findEdges () { //This function finds the edges for the motor movements - Ma
   delay(2000); //wait a few seconds
 
 
-  while ((analogRead(limitSwPin) <= magnetHigh) && (analogRead(limitSwPin) >= magnetLow)) { // numbers might need adjusting based on analog reads of hall sensor
+// This WHILE Lines works for Hall Sensor
+//  while ((analogRead(limitSwPin) <= magnetHigh) && (analogRead(limitSwPin) >= magnetLow)) { // numbers might need adjusting based on analog reads of hall sensor
+
+// This While Line Works for regular switches
+  while (digitalRead(limitSwPin) == HIGH) { //button not pressed (it's in pullup mode) 
     move(150, 1);
     newPosition = myEnc.read();
     if (newPosition != oldPosition) {
@@ -121,6 +129,7 @@ void findEdges () { //This function finds the edges for the motor movements - Ma
       Serial.println(newPosition); // DEBUG - Disable eventually
     }
   }
+  
   maxPosition = newPosition;
   stopMotor();
   Serial.print("MAX Position: ");

@@ -54,14 +54,18 @@ Encoder myEnc(2, 3); //on Uno, the pins with interrupt capability are 2 and 3 (h
 
 
 // *** LIMIT SWITCH  ***
-#define limitSwPin A0 // The pin for the limit switch.  
+#define limitSwPin A0 // The pin for the limit switch. 
 // For a regular switch, set as INPUT_PULLUP and connect the switch to GND and look for LOW for trigger. (https://www.arduino.cc/en/Tutorial/DigitalInputPullup)
+
+// Values for Hall Sensor
 int magnetHigh = 520; // high range for magnet detection (460+578?)
 int magnetLow = 440;
 
 // Initiate a Bounce object: //needed for digital switch
 Bounce debouncer1 = Bounce();
 Bounce debouncer2 = Bounce();
+Bounce debouncer3 = Bounce();
+
 
 // **************************
 
@@ -94,28 +98,9 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Rachel's Clock");
 
-  Serial.println("***STARTING RTC***");
-
-  if (! rtc.begin()) {
-    Serial.println("Couldn't find RTC");
-  }
-  if (! rtc.isrunning()) {
-    Serial.println("RTC is NOT running!");
-  }
 
   inputString.reserve(200);   // reserve 200 bytes for the inputString
 
-
-  // Setting Timers
-  timer.setInterval(4999, showTime); // This will display the time every 5 seconds on serial. Disable if needed.
-  //  timer.setInterval(1000, minuteMove); // This will move the motor every minute. Not needed currently
-//  timer.setInterval(5000, fiveSecMove); //moves the motor every 5 second forward. Should not be enabled by default
-
-
-  // following line sets the RTC to the date & time this sketch was compiled
-  // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  // This line sets the RTC with an explicit date & time,
-  // rtc.adjust(DateTime(2017, 6, 2, 15, 29, 0));
 
 
   // ***** PIN SETUP *****
@@ -123,16 +108,14 @@ void setup() {
   pinMode(motorSpeedPin, OUTPUT);
   pinMode(CWPin, OUTPUT);
   pinMode(CCWPin, OUTPUT);
-  pinMode(limitSwPin, INPUT);
+  pinMode(limitSwPin, INPUT_PULLUP);
   pinMode(enablePin, OUTPUT);
   pinMode(fwdButton, INPUT_PULLUP);
   pinMode(backButton, INPUT_PULLUP);
   pinMode(debugLED, OUTPUT);
   
 
-  // After setting up the limit SW, setup the Bounce instance (only needed for digital switch :
-  //  debouncer.attach(limitSwPin);
-  //  debouncer.interval(90); // 90 seemed to work fast enough. Test and modify if needed
+
 
   digitalWrite(enablePin, HIGH); // Turns the motor on
 
@@ -141,6 +124,10 @@ void setup() {
 
   debouncer1.interval(90); // 90 seemed to work fast enough. Test and modify if needed
   debouncer2.interval(90); // 90 seemed to work fast enough. Test and modify if needed
+
+// After setting up the limit SW, setup the Bounce instance (only needed for digital switch :
+  debouncer3.attach(limitSwPin);
+  debouncer3.interval(90); // 90 seemed to work fast enough. Test and modify if needed
 
   findEdges();
 
@@ -166,9 +153,12 @@ void loop() {
   // **** CHECK SWITCHes ****
   debouncer1.update();
   debouncer2.update();
-//  if (analogRead(limitSwPin) > 519) { // OLD WAY - might change the number and / or the direction depend o magent pul
-  if ((analogRead(limitSwPin) >= magnetHigh) || (analogRead(limitSwPin) <= magnetLow)) { // numbers might need adjusting based on analog reads of hall sensor
+  debouncer3.update();
 
+// Limit SW - For hall sensor
+//  if ((analogRead(limitSwPin) >= magnetHigh) || (analogRead(limitSwPin) <= magnetLow)) { // numbers might need adjusting based on analog reads of hall sensor
+// Limit SW - For Regular SW
+ if (debouncer3.fell()) {
     //    myEnc.write(0); // writes 0 to the encoder location
     Serial.println("Limit Switch Activated"); // DEBUG
     digitalWrite(debugLED, HIGH); //turn on debug led
